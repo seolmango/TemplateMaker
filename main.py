@@ -72,7 +72,7 @@ class AlbumReviewApp(QMainWindow):
         self.tracks = []
         self.temp_last_disc = 1
         self.temp_last_order = 1
-        self.temp_data_path = "temp_data.pkl"
+        self.temp_data_path = "temp.riv"
 
         # Main layout
         self.main_widget = QWidget()
@@ -180,7 +180,7 @@ class AlbumReviewApp(QMainWindow):
             pickle.dump((self.album_info, self.tracks), f)
 
     def load_temp_data(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Temp Data File", "", "Pickle Files (*.pkl)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Temp Data File", "", "Review Files (*.riv)")
         if file_path:
             self.temp_data_path = file_path
             with open(file_path, "rb") as f:
