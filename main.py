@@ -5,9 +5,9 @@ from PyQt5.QtWidgets import (
     QTextEdit, QCheckBox
 )
 from PyQt5.QtCore import QTimer
-from Maker import title_page, mood_page, list_page, second_to_time
+from Maker import title_page, mood_page, list_page
 import pickle
-
+import os, sys
 
 class TrackDialog(QDialog):
     def __init__(self, disc, order, parent=None):
@@ -150,6 +150,7 @@ class AlbumReviewApp(QMainWindow):
         self.delete_track_button.setEnabled(False)
         self.delete_track_button.clicked.connect(self.delete_track)
         complete_button = QPushButton("완료")
+        self.complete_button = complete_button
         complete_button.clicked.connect(self.complete_album)
 
         button_layout.addWidget(add_track_button)
@@ -293,9 +294,19 @@ class AlbumReviewApp(QMainWindow):
             return
         if not all([self.review_number.value(), self.artist_name.text(), self.album_name.text(), self.reviewer_nickname.text()]):
             return
-        title_page(self.review_number.value(), self.artist_name.text(), self.album_name.text(), self.reviewer_nickname.text())
-        mood_page(self.review_number.value(), self.album_info["cover_image"], self.album_name.text(), self.artist_name.text(), len(self.tracks), f"{self.playtime.text()}", self.when.text(), self.genre.text(), self.why_review.toPlainText())
-        list_page(self.review_number.value(), self.tracks)
+        save_folder = QFileDialog.getExistingDirectory(self, "Select Save Folder")
+        if not save_folder:
+            return
+        invalid_chars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+        save_folder = os.path.join(save_folder, f"{''.join([char for char in self.album_name.text() if char not in invalid_chars])}")
+        os.makedirs(save_folder, exist_ok=True)
+        self.complete_button.setEnabled(False)
+        self.complete_button.setText("이미지 제작 중...")
+        title_page(save_folder, self.review_number.value(), self.artist_name.text(), self.album_name.text(), self.reviewer_nickname.text())
+        mood_page(save_folder, self.review_number.value(), self.album_info["cover_image"], self.album_name.text(), self.artist_name.text(), len(self.tracks), f"{self.playtime.text()}", self.when.text(), self.genre.text(), self.why_review.toPlainText())
+        list_page(save_folder, self.review_number.value(), self.tracks)
+        self.complete_button.setEnabled(True)
+        self.complete_button.setText("완료")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

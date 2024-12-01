@@ -39,7 +39,7 @@ def make_base(number, info):
   return image, draw
 
 
-def title_page(number, artist, album, nickname):
+def title_page(save_path, number, artist, album, nickname):
     width = 1080
     image, draw = make_base(number, "@idont_knowmusic")
 
@@ -59,9 +59,9 @@ def title_page(number, artist, album, nickname):
     draw.text((95, 940), f"이 리뷰는 정답이 아니며 수많은 관점 중 하나일 뿐입니다", fill=COLOR_TEXT, anchor="lm", font=more_text_font)
     draw.text((95, 985), f"여러분의 음악에 대한 감상과 감정은 그 자체로 존중받아야 합니다", fill=COLOR_TEXT, anchor="lm", font=more_text_font)
 
-    image.save(f"0.png")
+    image.save(f"{save_path}/0.png")
 
-def mood_page(number, cover, title, artist, song_count, time, when, genre, why):
+def mood_page(save_path, number, cover, title, artist, song_count, time, when, genre, why):
     image, draw = make_base(number, "@idont_knowmusic")
 
     cover_image = Image.open(cover)
@@ -69,7 +69,7 @@ def mood_page(number, cover, title, artist, song_count, time, when, genre, why):
     draw.rectangle([90, 180, 510, 600], fill=COLOR_TEXT)
     draw.rectangle([95, 185, 505, 595], fill=COLOR_BACKGROUND)
 
-    image.paste(cover_image, [100, 190])
+    image.paste(cover_image, (100, 190))
 
     album_text_lines = wrap_text(title, 13)
     for i, lines in enumerate(album_text_lines):
@@ -90,14 +90,7 @@ def mood_page(number, cover, title, artist, song_count, time, when, genre, why):
     why_text_lines = wrap_text(why, 30)
     for i, lines in enumerate(why_text_lines):
       draw.text((90, 700 + (45*i)), f"{lines.strip(' ')}", fill=COLOR_TEXT, font=ImageFont.truetype(FONT_PATH_LIGHT, 40), anchor="lm")
-    image.save(f"1.png")
-
-def second_to_time(second):
-    # 시간:분:초로 변환
-    hour = second // 3600
-    minute = (second % 3600) // 60
-    second = second % 60
-    return f"{hour:02d}:{minute:02d}:{second:02d}" if hour else f"{minute:02d}:{second:02d}"
+    image.save(f"{save_path}/1.png")
 
 
 def wrap_text(text, max_length):
@@ -121,7 +114,7 @@ def wrap_text(text, max_length):
                 break
     return lines
 
-def list_page(number, track_list):
+def list_page(save_path, number, track_list):
     image, draw = make_base(number, "@idont_knowmusic")
     draw.text((90, 190), f"트랙 리스트", fill=COLOR_ACCENT, font=ImageFont.truetype(FONT_PATH_LIGHT, 40), anchor="lm")
 
@@ -151,4 +144,4 @@ def list_page(number, track_list):
         draw.text((540, y), line, fill=COLOR_ACCENT if track[2] else COLOR_TEXT, font=ImageFont.truetype(FONT_PATH_LIGHT, 30), anchor="lm")
         y += 40
 
-    image.save(f"2.png")
+    image.save(f"{save_path}/2.png")
