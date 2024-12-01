@@ -26,12 +26,6 @@ class TrackDialog(QDialog):
         self.track_order.setValue(order)
         self.track_title = QLineEdit()
         self.is_title_track = QCheckBox("Title")
-        self.playtime_minutes = QSpinBox()
-        self.playtime_minutes.setMinimum(0)
-        self.playtime_minutes.setMaximum(59)
-        self.playtime_seconds = QSpinBox()
-        self.playtime_seconds.setMinimum(0)
-        self.playtime_seconds.setMaximum(59)
 
         # 상세 리뷰
         self.review_checkbox = QCheckBox("상세 리뷰 작성")
@@ -54,24 +48,16 @@ class TrackDialog(QDialog):
         self.layout.addRow("트랙 순서:", self.track_order)
         self.layout.addRow("트랙 제목:", self.track_title)
         self.layout.addRow(self.is_title_track)
-        time_layout = QHBoxLayout()
-        time_layout.addWidget(QLabel("분:"))
-        time_layout.addWidget(self.playtime_minutes)
-        time_layout.addWidget(QLabel("초:"))
-        time_layout.addWidget(self.playtime_seconds)
-        self.layout.addRow("재생 시간:", time_layout)
         self.layout.addRow(self.review_checkbox)
         self.layout.addRow(self.review_text)
         self.layout.addRow(self.save_button, self.cancel_button)
 
     def get_track_data(self):
-        total_seconds = self.playtime_minutes.value() * 60 + self.playtime_seconds.value()
         return {
             "disc": self.disc_number.value(),
             "order": self.track_order.value(),
             "title": self.track_title.text(),
             "is_title": self.is_title_track.isChecked(),
-            "playtime": total_seconds,
             "review": self.review_text.toPlainText() if self.review_checkbox.isChecked() else None,
         }
 
@@ -117,6 +103,7 @@ class AlbumReviewApp(QMainWindow):
         self.genre = QLineEdit()
         self.cover_label = QLabel("이미지가 선택되지 않았습니다.")
         self.when = QLineEdit()
+        self.playtime = QLineEdit()
 
         # Event 연결(업데이트)
         self.album_name.textChanged.connect(self.update_album_info)
@@ -126,6 +113,7 @@ class AlbumReviewApp(QMainWindow):
         self.review_number.valueChanged.connect(self.update_album_info)
         self.reviewer_nickname.textChanged.connect(self.update_album_info)
         self.why_review.textChanged.connect(self.update_album_info)
+        self.playtime.textChanged.connect(self.update_album_info)
 
         cover_button = QPushButton("커버 이미지 선택")
         cover_button.clicked.connect(self.select_cover_image)
@@ -136,6 +124,7 @@ class AlbumReviewApp(QMainWindow):
         album_form.addRow("아티스트:", self.artist_name)
         album_form.addRow("장르:", self.genre)
         album_form.addRow("발매 연도:", self.when)
+        album_form.addRow("재생 시간:", self.playtime)
         album_form.addRow("커버 이미지:", self.cover_label)
         album_form.addRow(cover_button)
         self.layout.addLayout(album_form)
@@ -183,6 +172,7 @@ class AlbumReviewApp(QMainWindow):
         self.album_info["genre"] = self.genre.text()
         self.album_info["when"] = self.when.text()
         self.album_info['why_review'] = self.why_review.toPlainText()
+        self.album_info['playtime'] = self.playtime.text()
 
     def save_temp_data(self):
         with open(self.temp_data_path, "wb") as f:
@@ -202,11 +192,12 @@ class AlbumReviewApp(QMainWindow):
             self.review_number.setValue(temp_album_info.get("review_number", 1))
             self.reviewer_nickname.setText(temp_album_info.get("reviewer_nickname", ""))
             self.why_review.setPlainText(temp_album_info.get("why_review", ""))
+            self.playtime.setText(temp_album_info.get("playtime", ""))
             self.album_info["cover_image"] = temp_album_info.get("cover_image", "")
             self.tracks = temp_tracks
             self.track_list.clear()
             for track_data in self.tracks:
-                self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']} ({track_data['playtime'] // 60}:{track_data['playtime'] % 60:02d}) {'[Title Track]' if track_data['is_title'] else ''}")
+                self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']} {'[Title Track]' if track_data['is_title'] else ''}")
             self.update_track_summary()
 
     def closeEvent(self, a0):
@@ -230,7 +221,7 @@ class AlbumReviewApp(QMainWindow):
             self.tracks.sort(key=lambda x: (x["disc"], x["order"]))
             self.track_list.clear()
             for track_data in self.tracks:
-                self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']} ({track_data['playtime'] // 60}:{track_data['playtime'] % 60:02d}) {'[Title Track]' if track_data['is_title'] else ''}")
+                self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']} {'[Title Track]' if track_data['is_title'] else ''}")
             # self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']}")
             self.update_track_summary()
 
@@ -241,13 +232,11 @@ class AlbumReviewApp(QMainWindow):
             self.edit_track_button.setEnabled(True)
             index = self.track_list.row(selected_item)
             track = self.tracks[index]
-            minutes, seconds = divmod(track["playtime"], 60)
             details = (
                 f"Disc: {track['disc']}\n"
                 f"Order: {track['order']}\n"
                 f"Title: {track['title']}\n"
                 f"Title Track: {'Yes' if track['is_title'] else 'No'}\n"
-                f"Playtime: {minutes}:{seconds:02d}\n"
                 f"Review: {track['review'] or 'None'}"
             )
             self.track_details.setText(details)
@@ -259,10 +248,8 @@ class AlbumReviewApp(QMainWindow):
     def update_track_summary(self):
         total_tracks = len(self.tracks)
         total_discs = len(set(track["disc"] for track in self.tracks))
-        total_playtime = sum(track["playtime"] for track in self.tracks)
-        minutes, seconds = divmod(total_playtime, 60)
         self.track_details.setText(
-            f"No track selected. Total Tracks: {total_tracks}, Discs: {total_discs}, Total Playtime: {minutes}:{seconds:02d}"
+            f"No track selected. Total Tracks: {total_tracks}, Discs: {total_discs}, Total Playtime: {self.playtime.text()}"
         )
 
     def delete_track(self):
@@ -285,8 +272,6 @@ class AlbumReviewApp(QMainWindow):
         dialog.track_order.setValue(track["order"])
         dialog.track_title.setText(track["title"])
         dialog.is_title_track.setChecked(track["is_title"])
-        dialog.playtime_minutes.setValue(track["playtime"] // 60)
-        dialog.playtime_seconds.setValue(track["playtime"] % 60)
         if track["review"]:
             dialog.review_checkbox.setChecked(True)
             dialog.review_text.setPlainText(track["review"])
@@ -297,7 +282,7 @@ class AlbumReviewApp(QMainWindow):
             self.tracks.sort(key=lambda x: (x["disc"], x["order"]))
             self.track_list.clear()
             for track_data in self.tracks:
-                self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']} ({track_data['playtime'] // 60}:{track_data['playtime'] % 60:02d}) {'[Title Track]' if track_data['is_title'] else ''}")
+                self.track_list.addItem(f"Disc {track_data['disc']} - {track_data['order']}: {track_data['title']} {'[Title Track]' if track_data['is_title'] else ''}")
             self.update_track_summary()
 
     def complete_album(self):
@@ -309,7 +294,7 @@ class AlbumReviewApp(QMainWindow):
         if not all([self.review_number.value(), self.artist_name.text(), self.album_name.text(), self.reviewer_nickname.text()]):
             return
         title_page(self.review_number.value(), self.artist_name.text(), self.album_name.text(), self.reviewer_nickname.text())
-        mood_page(self.review_number.value(), self.album_info["cover_image"], self.album_name.text(), self.artist_name.text(), len(self.tracks), f"{second_to_time(sum(track['playtime'] for track in self.tracks))}", self.when.text(), self.genre.text(), self.why_review.toPlainText())
+        mood_page(self.review_number.value(), self.album_info["cover_image"], self.album_name.text(), self.artist_name.text(), len(self.tracks), f"{self.playtime.text()}", self.when.text(), self.genre.text(), self.why_review.toPlainText())
         list_page(self.review_number.value(), self.tracks)
 
 if __name__ == "__main__":

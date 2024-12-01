@@ -105,6 +105,8 @@ def wrap_text(text, max_length):
     paragraphs = text.split('\n')
 
     for paragraph in paragraphs:
+        if paragraph == '':
+            lines.append('')
         while paragraph:
             if len(paragraph) > max_length:
                 space_index = paragraph[:max_length + 1].rfind(' ')
@@ -125,30 +127,28 @@ def list_page(number, track_list):
 
     text_lines = [[],[],[],[]]
     for track in track_list:
-      text_lines[track['disc']-1].append([track['order'],track['title'],track['is_title'], second_to_time(track['playtime'])])
-    # [{'disc': 1, 'order': 1, 'title': '기억을 걷는 시간', 'is_title': True, 'playtime': 222, 'review': None}, {'disc': 1, 'order': 2, 'title': 'Moon light Punch Romance', 'is_title': False, 'playtime': 254, 'review': None}]
-
+      text_lines[track['disc']-1].append([track['order'],track['title'],track['is_title']])
     draw.text((90, 250), f"CD1", fill=COLOR_ACCENT, font=ImageFont.truetype(FONT_PATH_LIGHT, 30), anchor="lm")
     y = 300
     for track in text_lines[0]:
-      temp = f"{track[0]}. {track[1]} ({track[3]})"
+      temp = f"{track[0]}. {track[1]}" + ("{Title}" if track[2] else "")
       if len(text_lines[1]) != 0:
         draw.text((540, 250), f"CD2", fill=COLOR_ACCENT, font=ImageFont.truetype(FONT_PATH_LIGHT, 30), anchor="lm")
         temp = wrap_text(temp, 22)
         for line in temp:
           draw.text((90, y), line, fill=COLOR_ACCENT if track[2] else COLOR_TEXT, font=ImageFont.truetype(FONT_PATH_LIGHT, 30), anchor="lm")
-          y += 35
+          y += 40
       else:
         temp = wrap_text(temp, 40)
         for line in temp:
-          draw.text((90, y), line, fill=COLOR_ACCENT if track[2] else COLOR_TEXT, font=ImageFont.truetype(FONT_PATH_LIGHT, 30), anchor="lm")
-          y += 35
+          draw.text((90, y), line, fill=COLOR_ACCENT if track[2] else COLOR_TEXT, font=ImageFont.truetype(FONT_PATH_LIGHT, 40), anchor="lm")
+          y += 45
     y = 300
     for track in text_lines[1]:
-      temp = f"{track[0]}. {track[1]} ({track[3]})"
+      temp = f"{track[0]}. {track[1]}" + ("{Title}" if track[2] else "")
       temp = wrap_text(temp, 22)
       for line in temp:
         draw.text((540, y), line, fill=COLOR_ACCENT if track[2] else COLOR_TEXT, font=ImageFont.truetype(FONT_PATH_LIGHT, 30), anchor="lm")
-        y += 35
+        y += 40
 
     image.save(f"2.png")
