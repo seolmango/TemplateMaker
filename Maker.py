@@ -145,3 +145,24 @@ def list_page(save_path, number, track_list):
         y += 40
 
     image.save(f"{save_path}/2.png")
+
+def review_page(save_path, number, tracks):
+    # Filter, null or not
+    tracks_with_reviews = [track for track in tracks if track['review']]
+    
+    for i, track in enumerate(tracks_with_reviews, 1):
+        if track['review']:
+            image, draw = make_base(number, "@idont_knowmusic")
+            
+            draw.text((90, 190), f"트랙 리뷰: {track['title']}", fill=COLOR_ACCENT, font=ImageFont.truetype(FONT_PATH_LIGHT, 40), anchor="lm")
+            
+            review_text_lines = wrap_text(track['review'], 35)
+            
+            # Determine font size, temporary 
+            font_size = 40 if len(review_text_lines) <= 10 else 30
+            review_font = ImageFont.truetype(FONT_PATH_LIGHT, font_size)
+            
+            for j, line in enumerate(review_text_lines):
+                draw.text((90, 250 + (font_size * j)), line, fill=COLOR_TEXT, font=review_font, anchor="lm")
+            
+            image.save(f"{save_path}/review_track_{track['disc']}_{track['order']}.png")
