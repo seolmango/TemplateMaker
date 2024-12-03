@@ -1,2 +1,5 @@
 *.png
 *.riv
+*temp*
+*.cpython-311.pyc
+*.json

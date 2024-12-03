@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QTextEdit, QCheckBox
 )
 from PyQt5.QtCore import QTimer
-from Maker import title_page, mood_page, list_page
+from Maker import title_page, mood_page, list_page, review_page
 import pickle
 import os, sys
 
@@ -305,6 +305,7 @@ class AlbumReviewApp(QMainWindow):
         title_page(save_folder, self.review_number.value(), self.artist_name.text(), self.album_name.text(), self.reviewer_nickname.text())
         mood_page(save_folder, self.review_number.value(), self.album_info["cover_image"], self.album_name.text(), self.artist_name.text(), len(self.tracks), f"{self.playtime.text()}", self.when.text(), self.genre.text(), self.why_review.toPlainText())
         list_page(save_folder, self.review_number.value(), self.tracks)
+        review_page(save_folder, self.review_number.value(), self.tracks)
         self.complete_button.setEnabled(True)
         self.complete_button.setText("완료")
 
